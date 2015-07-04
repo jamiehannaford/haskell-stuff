@@ -1,6 +1,8 @@
 {-# OPTIONS_GHC -Wall #-}
 module HW02 where
 
+import Data.List
+
 -- Mastermind -----------------------------------------
 
 -- A peg can be one of six colors
@@ -57,17 +59,29 @@ isConsistent (Move c1 e1 ne1) c2 = exactMatches c1 c2 == e1 && nonExactMatches c
 -- Exercise 5 -----------------------------------------
 
 filterCodes :: Move -> [Code] -> [Code]
-filterCodes = undefined
+filterCodes m l = filter (isConsistent m) l
 
 -- Exercise 6 -----------------------------------------
 
-allCodes :: Int -> [Code]
-allCodes = undefined
+-- Calculate the cartesian product of two lists
+prod :: [[a]] -> [[a]] -> [[a]]
+prod as bs = [a ++ b | a <- as, b <- bs]
 
--- Exercise 7 -----------------------------------------
+-- Calculate n-amount of permutations of colors
+allCodes :: Int -> [Code]
+allCodes n = foldr1 prod $ replicate n $ group colors
+
+-- Exercise 7 ----------------------------------------
+
+takeUntilPerfect :: Int -> [Move] -> [Move]
+takeUntilPerfect _ [] = []
+takeUntilPerfect i (x@(Move _ y _):xs) = x : if i /= y then takeUntilPerfect i xs else []
 
 solve :: Code -> [Move]
-solve = undefined
+solve secret = takeUntilPerfect sLength $ scanr (\attempt _ -> getMove secret attempt) first (tail attempts)
+  where attempts = allCodes sLength
+        first    = getMove secret (head attempts)
+        sLength  = length secret
 
 -- Bonus ----------------------------------------------
 
