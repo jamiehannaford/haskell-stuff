@@ -86,12 +86,12 @@ evalSimple :: State -> DietStatement -> State
 evalSimple state ds = case ds of
   (DAssign s e)     -> extend state s (evalE state e)
   (DIf e s1 s2)     -> if evalE state e == 1 then evalSimple state s1 else evalSimple state s2
-  (DWhile e s)      -> if evalE state e == 0 then evalSimple (evalSimple state s) ds else state
+  (DWhile e s)      -> if evalE state e == 1 then evalSimple (evalSimple state s) ds else state
   (DSequence s1 s2) -> evalSimple (evalSimple state s1) s2
   (DSkip)           -> state
 
 run :: State -> Statement -> State
-run = undefined
+run s st = evalSimple s (desugar st) 
 
 -- Programs -------------------------------------------
 
