@@ -6,7 +6,7 @@ import Data.ByteString.Lazy (ByteString)
 import Data.Map.Strict (Map)
 import System.Environment (getArgs)
 import Data.Bits (xor)
-import Data.List (intersect)
+import Data.List (intersect, sortBy, (\\))
 
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.Map.Strict as Map
@@ -57,23 +57,38 @@ applyFn k fn mp = if Map.notMember k mp then applyFn k fn (Map.insert k 0 mp) el
 add k n mp = applyFn k (\x -> x + n) mp
 deduct k n mp = applyFn k (\x -> x - n) mp
 
+parseTrns :: [Transaction] -> Map String Integer -> Map String Integer
+parseTrns ts inMp = foldr (\tr mp -> deduct (from tr) (amount tr) $ add (to tr) (amount tr) mp) inMp ts
+
 getFlow :: [Transaction] -> Map String Integer
-getFlow ts = foldr (\tr mp -> deduct (from tr) (amount tr) $ add (to tr) (amount tr) mp) Map.empty ts
+getFlow ts = parseTrns ts Map.empty 
 
 -- Exercise 6 -----------------------------------------
 
 getCriminal :: Map String Integer -> String
-getCriminal = undefined
+getCriminal mp = fst $ Map.foldrWithKey (\p c1 acc@(_, c2) -> if c1 > c2 then (p, c1) else acc) ("", 0) mp 
 
 -- Exercise 7 -----------------------------------------
 
+adjust :: (String, Integer) -> (String, Integer) -> String -> Transaction
+adjust (p1N, p1A) (p2N, p2A) id = Transaction{from = p1N, to = p2N, amount = abs amount, tid = id}
+  where amount = abs $ if (abs p1A) > (abs p2A) then p2A else p1A
+
+trim :: Map String Integer -> Map String Integer
+trim mp = Map.filter ((/=) 0) mp
+
 undoTs :: Map String Integer -> [TId] -> [Transaction]
-undoTs = undefined
+undoTs input tids
+  | length payers == 0 || length payees == 0 = []
+  | otherwise                                = trans ++ undoTs (trim (parseTrns trans input)) (tids \\ [tid tr | tr <- trans])
+  where trans  = zipWith3 adjust payers payees tids
+        payers = sortBy (\(_,s1) (_,s2) -> s2 `compare` s1) $ Map.assocs $ Map.filter (\x -> x > 0) input
+        payees = sortBy (\(_,s1) (_,s2) -> s1 `compare` s2) $ Map.assocs $ Map.filter (\x -> x <= 0) input
 
 -- Exercise 8 -----------------------------------------
 
 writeJSON :: ToJSON a => FilePath -> a -> IO ()
-writeJSON = undefined
+writeJSON p d = BS.writeFile p $ encode d
 
 -- Exercise 9 -----------------------------------------
 
