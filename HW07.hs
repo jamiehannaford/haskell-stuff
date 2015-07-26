@@ -48,10 +48,10 @@ randomElt v = (v !?) <$> getRandomR (0, V.length v - 1)
 -- Exercise 4 -----------------------------------------
 
 randomVec :: Random a => Int -> Rnd (Vector a)
-randomVec = undefined 
+randomVec n = V.sequence $ V.replicate n getRandom
 
 randomVecR :: Random a => Int -> (a, a) -> Rnd (Vector a)
-randomVecR = undefined
+randomVecR n r = V.sequence $ V.replicate n $ getRandomR r
 
 -- Exercise 5 -----------------------------------------
 
