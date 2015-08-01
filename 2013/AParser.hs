@@ -32,7 +32,7 @@ first :: (a -> b) -> (a,c) -> (b,c)
 first f (a,c) = (f a,c)
 
 instance Functor Parser where
-  fmap f a = Parser (\s -> fmap (first f) (runParser a $ s))
+  fmap f (Parser a) = Parser (fmap (first f) . a)
 
 instance Applicative Parser where
   pure a  = Parser (\s -> Just (a, s))
