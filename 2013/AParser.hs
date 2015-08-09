@@ -49,3 +49,26 @@ abParser_ = (\_ _ -> ()) <$> char 'a' <*> char 'b'
 
 intPair :: Parser [Integer]
 intPair = (\a _ b -> [a,b]) <$> posInt <*> char ' ' <*> posInt
+
+instance Alternative Parser where
+  empty     = Parser (\_ -> Nothing)
+  (<|>) f g = Parser (\s -> (runParser f s) <|> (runParser g s))
+
+satisfiesInt :: Parser ()
+satisfiesInt = Parser f
+  where
+    f [] = Nothing
+    f (x:xs)
+      | isDigit x = Just ((), dropWhile isDigit xs) 
+      | otherwise = Nothing
+
+satisfiesUpper :: Parser ()
+satisfiesUpper = Parser f
+  where 
+    f [] = Nothing
+    f (x:xs)
+      | isUpper x = Just ((), xs)
+      | otherwise = Nothing
+
+intOrUppercase :: Parser ()
+intOrUppercase = satisfiesInt <|> satisfiesUpper
